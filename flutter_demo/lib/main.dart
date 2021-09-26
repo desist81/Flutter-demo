@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-
 import 'Task.dart';
+import 'storage.dart';
+import 'todo_list.dart';
+import 'user_store.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,16 +53,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  final _suggestions = <Task>[];
+  List<Task> _taskList = <Task>[];
   final _biggerFont = const TextStyle(fontSize: 18.0);
+  final Storage storage = Storage();
 
-  Widget _buildSuggestions() {
+  Widget _buildTaskList() {
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemBuilder: /*1*/ (context, i) {
-          if (i < _suggestions.length) {
-            return _buildRow(_suggestions[i]);
+          if (i < _taskList.length) {
+            return _buildRow(_taskList[i]);
           } else {
             return ListTile(
               title: Text('', style: _biggerFont),
@@ -115,10 +118,14 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
           onPressed: () {
             setState(() {
-              _suggestions.add(Task(_newTask, DateTime.now()));
-              _newTask = '';
-              Navigator.of(context).pop();
+              _taskList.add(Task(_newTask, DateTime.now()));
             });
+            /*    TodoList todoTaskList = TodoList('Flutter-demo', _taskList);
+            Map<String, dynamic> mapTodo = todoTaskList.toJson();
+            String jsonString = mapTodo.toString();
+            storage.writeCollection(jsonString); */
+            _newTask = '';
+            Navigator.of(context).pop();
           },
           child: const Text('Create'),
         ),
@@ -133,12 +140,26 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    /* storage.readCollection().then((String value) {
+      if (value.isNotEmpty) {
+        Map<String, dynamic> tasksMap = jsonDecode(value);
+        TodoList todo = TodoList.fromJson(tasksMap);
+        setState(() {
+          _taskList = todo.tasks;
+        });
+      }
+    }); */
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo list'),
       ),
-      body: _buildSuggestions(),
+      body: _buildTaskList(),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',

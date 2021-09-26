@@ -1,10 +1,13 @@
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:json_annotation/json_annotation.dart'
+    show JsonKey, JsonSerializable;
 
+@JsonSerializable(includeIfNull: false)
 class Task {
-  /// The first part of the pair.
+  @JsonKey(includeIfNull: false)
   final String name;
 
-  /// The second part of the pair.
+  @JsonKey(name: 'date')
   final DateTime date;
   late final String formattedDate =
       DateFormat('yyyy-MM-dd – kk:mm').format(date);
