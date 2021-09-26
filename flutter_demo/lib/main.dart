@@ -1,5 +1,6 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+
+import 'Task.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,55 +51,89 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  final _suggestions = <WordPair>[];
+  final _suggestions = <Task>[];
   final _biggerFont = const TextStyle(fontSize: 18.0);
 
   Widget _buildSuggestions() {
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemBuilder: /*1*/ (context, i) {
-          if (i.isOdd) {
-            return const Divider(); /*2*/
-          }
           if (i < _suggestions.length) {
-            final index = i ~/ 2; /*3*/
-            return _buildRow(_suggestions[index]);
+            return _buildRow(_suggestions[i]);
+          } else {
+            return ListTile(
+              title: Text('', style: _biggerFont),
+            );
           }
-          return ListTile(
-            title: Text('', style: _biggerFont),
-          );
         });
   }
 
-  Widget _buildRow(WordPair pair) {
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: _biggerFont,
-      ),
+  Widget _buildRow(Task task) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ListTile(
+          title: Text(
+            task.toString(),
+            style: _biggerFont,
+          ),
+        ),
+        const Divider(),
+      ],
     );
   }
 
   void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-      _suggestions.addAll(generateWordPairs().take(1)); /*4*/
-    });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => _buildPopupDialog(context),
+    );
+  }
+
+  Widget _buildPopupDialog(BuildContext context) {
+    String _newTask = '';
+    return AlertDialog(
+      title: const Text('New task'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextFormField(
+            decoration: const InputDecoration(
+              filled: true,
+              hintText: 'Enter a task...',
+              labelText: 'New task',
+            ),
+            onChanged: (value) {
+              _newTask = value.toString();
+            },
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            setState(() {
+              _suggestions.add(Task(_newTask, DateTime.now()));
+              _newTask = '';
+              Navigator.of(context).pop();
+            });
+          },
+          child: const Text('Create'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Close'),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo list'),
@@ -108,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
