@@ -1,0 +1,135 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter_demo/model/task_item.dart';
+import 'package:flutter_demo/model/todo_list.dart';
+import 'package:flutter_demo/storages/user_store.dart';
+
+class ListPage extends StatefulWidget {
+  const ListPage({Key? key, required this.title}) : super(key: key);
+  final String title;
+
+  @override
+  State<ListPage> createState() => _ListPageState();
+}
+
+class _ListPageState extends State<ListPage> {
+  List<TaskItem> _taskList = <TaskItem>[];
+  final _biggerFont = const TextStyle(fontSize: 18.0);
+  final UserStore storage = UserStore();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Todo list'),
+      ),
+      body: _buildTaskList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openNewTaskDialog,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildTaskList() {
+    return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemBuilder: /*1*/ (context, i) {
+          if (i < _taskList.length) {
+            return _buildRow(_taskList[i]);
+          } else {
+            return ListTile(
+              title: Text('', style: _biggerFont),
+            );
+          }
+        });
+  }
+
+  Widget _buildRow(TaskItem task) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ListTile(
+          title: Text(
+            task.formattedDate(),
+            style: _biggerFont,
+          ),
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
+  void _openNewTaskDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => _buildPopupDialog(context),
+    );
+  }
+
+  Widget _buildPopupDialog(BuildContext context) {
+    String _newTask = '';
+    return AlertDialog(
+      title: const Text('New task'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextFormField(
+            decoration: const InputDecoration(
+              filled: true,
+              hintText: 'Enter a task...',
+              labelText: 'New task',
+            ),
+            onChanged: (value) {
+              _newTask = value.toString();
+            },
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            _saveNewTask(_newTask);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Create'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
+  void _loadTasks() {
+    storage.readCollection().then((String value) {
+      if (value.isNotEmpty) {
+        TodoList todo = TodoList.fromJson(jsonDecode(value));
+        setState(() {
+          _taskList = todo.tasks;
+        });
+      }
+    });
+  }
+
+  void _saveNewTask(String _newTask) {
+    setState(() {
+      _taskList.add(TaskItem(_newTask, DateTime.now()));
+    });
+    TodoList todoTaskList = TodoList('Flutter-demo', _taskList);
+    String jsonTodoTaskList = jsonEncode(todoTaskList);
+    storage.writeCollection(jsonTodoTaskList);
+  }
+}
