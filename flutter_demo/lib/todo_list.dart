@@ -1,23 +1,31 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'task_item.dart';
 
-import 'Task.dart';
-
-@JsonSerializable(includeIfNull: false)
 class TodoList {
-  @JsonKey(includeIfNull: false)
   final String owner;
-
-  @JsonKey(includeIfNull: false)
-  final List<Task> tasks;
+  final List<TaskItem> tasks;
 
   TodoList(this.owner, this.tasks);
 
-  TodoList.fromJson(Map<String, dynamic> json)
-      : owner = json['owner'],
-        tasks = json['tasks'];
+  Map toJson() {
+    List<Map> tasks = this.tasks.map((i) => i.toJson()).toList();
 
-  Map<String, dynamic> toJson() => {
-        'owner': owner,
-        'tasks': tasks,
-      };
+    return {'owner': owner, 'tasks': tasks};
+  }
+
+  factory TodoList.fromJson(dynamic json) {
+    if (json['tasks'] != null) {
+      var taskObjsJson = json['tasks'] as List;
+      List<TaskItem> _tasks =
+          taskObjsJson.map((taskJson) => TaskItem.fromJson(taskJson)).toList();
+
+      return TodoList(json['owner'] as String, _tasks);
+    } else {
+      return TodoList(json['owner'] as String, <TaskItem>[]);
+    }
+  }
+
+  @override
+  String toString() {
+    return '{ $owner, $tasks }';
+  }
 }

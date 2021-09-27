@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'Task.dart';
-import 'storage.dart';
+import 'task_item.dart';
 import 'todo_list.dart';
 import 'user_store.dart';
 
@@ -53,9 +52,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Task> _taskList = <Task>[];
+  List<TaskItem> _taskList = <TaskItem>[];
   final _biggerFont = const TextStyle(fontSize: 18.0);
-  final Storage storage = Storage();
+  final UserStore storage = UserStore();
 
   Widget _buildTaskList() {
     return ListView.builder(
@@ -71,14 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  Widget _buildRow(Task task) {
+  Widget _buildRow(TaskItem task) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         ListTile(
           title: Text(
-            task.toString(),
+            task.formattedDate(),
             style: _biggerFont,
           ),
         ),
@@ -118,13 +117,11 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
           onPressed: () {
             setState(() {
-              _taskList.add(Task(_newTask, DateTime.now()));
+              _taskList.add(TaskItem(_newTask, DateTime.now()));
             });
-            /*    TodoList todoTaskList = TodoList('Flutter-demo', _taskList);
-            Map<String, dynamic> mapTodo = todoTaskList.toJson();
-            String jsonString = mapTodo.toString();
-            storage.writeCollection(jsonString); */
-            _newTask = '';
+            TodoList todoTaskList = TodoList('Flutter-demo', _taskList);
+            String jsonTodoTaskList = jsonEncode(todoTaskList);
+            storage.writeCollection(jsonTodoTaskList);
             Navigator.of(context).pop();
           },
           child: const Text('Create'),
@@ -142,15 +139,14 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    /* storage.readCollection().then((String value) {
+    storage.readCollection().then((String value) {
       if (value.isNotEmpty) {
-        Map<String, dynamic> tasksMap = jsonDecode(value);
-        TodoList todo = TodoList.fromJson(tasksMap);
+        TodoList todo = TodoList.fromJson(jsonDecode(value));
         setState(() {
           _taskList = todo.tasks;
         });
       }
-    }); */
+    });
   }
 
   @override
